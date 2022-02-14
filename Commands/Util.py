@@ -23,6 +23,17 @@ class Info(commands.Cog):
         else:
             return await ctx.send("Player not in database. use `!register` to register an account with the bot.")
 
+    @commands.command(name="inventory", aliases=['inv'])
+    async def Inventory(self, ctx):
+        if dbh.check_exist(str(ctx.author.id)) == True:
+            Inventory = ''
+            
+            for key in db[str(ctx.author.id) + "-Inventory"]:
+                Inventory += f'{key}: {db[str(ctx.author.id) + "-Inventory"][key]}\n'
+            await ctx.send(f"<@{ctx.author.id}>'s Inventory:\n" + Inventory)
+        else:
+            return await ctx.send("Player not in database. use `!register` to register an account with the bot.")
+
     @commands.command(name='register', aliases=['reg'])
     async def register(self, ctx):
         """
@@ -34,3 +45,7 @@ class Info(commands.Cog):
             await ctx.send(f"You have registered an account!")
         else:
             await ctx.send("You're already registered!")
+
+    @commands.command(name='use', aliases=['useitem', 'activate'])
+    async def use(self, ctx):
+        pass

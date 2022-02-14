@@ -18,19 +18,26 @@ def create_user(user_id):
     Create a user with the starting values.
     """
     db[user_id] = {
-        # Currency name and starting amount is TBT.
-        "Money": 500, # Total amount of money. 500 is the starting amount, for now.
+        "Money": 500.00, # Total amount of money. 500 is the starting amount, for now.
         "Wins": 0, # Total wins
         "Losses": 0, # Total losses
         "Total Winnings": 0, # Amount of money won over every game played
     }
+    
+    db[user_id + "-Inventory"] = {
+        
+    }
+
+    db[user_id + "-ActivePotions"] = {
+
+    }
 
 def remove_user(user_id):
     del db[user_id]
-    
+
 # This function is only for testing.
 def wipe_database():
     amount = len(db.keys())
     for v in db.keys():
         del db[v]
-    return (f"{amount} user(s) removed.")
+    return ("Database Cleared.")

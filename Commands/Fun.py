@@ -15,4 +15,4 @@ class Fun(commands.Cog):
             print(args)
         await ctx.send(embed=embed)
         await asyncio.sleep(25)
-        await ctx.send(file=discord.File('Funny_Img/RickRoll.png')) 
+        await ctx.send(file=discord.File('Funny_Img/RickRoll.png'))

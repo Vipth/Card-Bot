@@ -39,7 +39,7 @@ class Game_Handler:
                 "Seven": 1,
                 "Eight": 1,
                 "Nine": 1,
-                "Ten": 1,
+                "Ten": 1, 
                 "Jack": 1,
                 "Queen": 1,
                 "King": 1
@@ -143,7 +143,8 @@ class Game_Handler:
                 "Hearts": {}
             }
             self.hand_value = 0
-            
+            self.highest_bet = 0
+
         def play_card(self, player, card: tuple):
             """
             Transfers a card to another player object.\n
@@ -157,8 +158,8 @@ class Game_Handler:
                 print(f"Card does not exist within {self.name}'s hand.")
 
     class Card_Hierarchy:
-
-        def format_cards(self, player, high_ace=False):
+        # Change high_ace to True because I add thing that would allow ace to works as 14 for straight 12345
+        def format_cards(self, player, high_ace=True):
 
             cards = dict()
             hand = player.hand
@@ -169,7 +170,7 @@ class Game_Handler:
                     suite_total += hand[suite][card]
                 if suite_total > 0:
                     cards.update({suite: {}})
-            
+
             # Updates the active cards to the proper suite in the cards dictionary.
             for suite in hand:
                 for card in hand[suite]:
@@ -195,7 +196,7 @@ class Game_Handler:
                         card = card + f'{str(suite[i])}'
                         cards_list.append(card)
                         card = ''
-            
+
             formatted_cards = []
             for i, v in enumerate(cards_list):
                 card = ''
@@ -245,31 +246,68 @@ class Game_Handler:
                 card = ''
             return formatted_cards
 
-        def pair(self, hand, river):
 
-            # Pair in hand
-            if hand[0][1:] == hand[1][1:]:
-                return True
+        def high_card(self, hand, river):
+            all_cards = []
+            for _, v in enumerate(hand):
+                all_cards.append(int(v[1:]))
+            for _, v in enumerate(river):
+                all_cards.append(int(v[1:]))
 
-            # Pair in hand + river
-            for i in range(len(hand)):
-                for x in range(len(river)):
-                    if hand[i][1:] == river[x][1:]:
-                        return True
+            all_cards.sort()
+            max_card = max(all_cards)
 
-            # Pair in river
-            for x in range(len(river)):
-                for y in range(len(river)):
-                    y += 1
-                    if x + y >= len(river):
-                        return False
-                    z = x + y
-                    if river[x][1:] == river[z][1:]:
-                        return True
+            # my test to see if I can do what we talk about 2nd hour 
+            if max_card == 14 or max_card == 1:
+                hc_value = 0.14
+            elif max_card == 13:
+                hc_value = 0.13
+            elif max_card == 12:
+                hc_value = 0.12
+            elif max_card == 11:
+                hc_value = 0.11
+            elif max_card == 10:
+                hc_value = 0.10
+            elif max_card == 9:
+                hc_value = 0.09
+            elif max_card == 8:
+                hc_value = 0.08
+            elif max_card == 7:
+                hc_value = 0.07
+            elif max_card == 6:
+                hc_value = 0.06
+            elif max_card == 5:
+                hc_value = 0.05
+            elif max_card == 4:
+                hc_value = 0.04
+            elif max_card == 3:
+                hc_value = 0.03
+            elif max_card == 2:
+                hc_value = 0.02
 
+            return hc_value 
+
+        def pair(self, player, hand, river):
+            all_cards = []
+            for _, v in enumerate(hand):
+                all_cards.append(v)
+            for _, v in enumerate(river):
+                all_cards.append(v)
+                        
+            highest_card = None
+            for i in range(len(all_cards)):
+                card_one = all_cards[i]
+                for j in range(len(all_cards)):
+                    card_two = all_cards[j]
+                    if i != j:
+                        if card_one == card_two: 
+                            if highest_card == None or int(card_one[1:]) > highest_card:
+                                    highest_card = int(card_one[1:]) * 0.01
+                            player.hand_value += highest_card
+                            return True
             return False
 
-        def two_pair(self, hand, river):
+        def two_pair(self, player, hand, river):
             # Copy all cards to a separate list
             all_cards = []
             for _, v in enumerate(hand):
@@ -280,6 +318,7 @@ class Game_Handler:
             # Compare cards
             amount_of_pairs = 0
             indices_to_avoid = []
+            highest_card = None
             for i in range(len(all_cards)):
                 card_one = all_cards[i]
                 for j in range(len(all_cards)):
@@ -290,20 +329,25 @@ class Game_Handler:
                                 indices_to_avoid.append(i)
                                 indices_to_avoid.append(j)
                                 amount_of_pairs += 1
+
+                                if highest_card == None or int(card_one[1:]) > highest_card:
+                                    highest_card = int(card_one[1:]) * 0.01
+
             if amount_of_pairs >= 2:
+                player.hand_value += highest_card
                 return True
             return False
 
-        def three_of_kind(self, hand, river):
+        def three_of_kind(self, player, hand, river):
             # Copy all cards to a separate list
             all_cards = []
             for _, v in enumerate(hand):
                 all_cards.append(int(v[1:]))
             for _, v in enumerate(river):
                 all_cards.append(int(v[1:]))
-            print(all_cards)
 
             # Compare cards
+            highest_card = None
             for i in range(len(all_cards)):
                 card_one = all_cards[i]
                 for j in range(len(all_cards)):
@@ -313,6 +357,9 @@ class Game_Handler:
                         #It is working where it find the three of a kinds
                         if i != j and i != k and j != k: 
                             if card_one == card_two and card_one == card_three:
+                                if highest_card == None or card_one > highest_card:
+                                    highest_card = card_one * 0.01
+                                player.hand_value += highest_card
                                 return True
 
             return False
@@ -336,7 +383,6 @@ class Game_Handler:
                                 card_five = all_cards[z]
                                 if (i != j and i != k and i != x and i != z) and (j != k and j != x and j != z) and (x != z and  k != x) and (k != z ):
                                             if card_one + 1 == card_two and card_two +1 == card_three and card_three + 1 == card_four and card_four + 1 == card_five:
-                                                print(card_one, card_two, card_three, card_four, card_five)
                                                 return True
                                             #This if statment makes ace works for 1, 2, 3, 4, 5
                                             if card_one == 14 and card_two == 2 and card_three == 3 and card_four == 4 and card_five == 5:
@@ -386,10 +432,10 @@ class Game_Handler:
                                     if (card_one == card_two) and (card_two == card_three) and (card_four == card_five):
                                         return True
             return False
-
-        # When ahead a did four of a kind since it would be easy so now we have royal flush and straight flush - H.D.
-        def four_of_kind(self, hand, river):
+ 
+        def four_of_kind(self, player, hand, river):
             all_cards = []
+            highest_card = None
             for _, v in enumerate(hand):
                 all_cards.append(int(v[1:]))
             for _, v in enumerate(river):
@@ -405,11 +451,13 @@ class Game_Handler:
                             card_four = all_cards[x]
                             if i != j and i != k and i !=x and j != k and j != x and k != x: 
                                 if card_one == card_two and card_one == card_three and card_one == card_four:
+                                    if highest_card == None or card_one > highest_card:
+                                        highest_card = card_one * 0.01
+                                    player.hand_value += highest_card
                                     return True
 
             return False
 
-        # Taking a shot at doing straight flush and I think I did it correctly - H.D.
         def straight_flush(self, hand, river):
             all_cards = []
             for _, v in enumerate(hand):
@@ -437,7 +485,6 @@ class Game_Handler:
                                             return True
             return False
 
-        # Got this ready don't know if there are any bugs though - H.D.
         def royal_flush(self, hand, river):
             all_cards = []
             for _, v in enumerate(hand):
